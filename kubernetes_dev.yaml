@@ -1,0 +1,76 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: java
+  namespace: javaservice
+spec:
+  type: LoadBalancer
+  selector:
+    app: java
+  ports:
+  - protocol: TCP
+    port: 8190
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java
+  namespace: javaservice
+  labels:
+    app: java
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0%
+      maxUnavailable: 25%
+  minReadySeconds: 5
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: java
+  template:
+    metadata:
+      labels:
+        app: java
+    spec:
+      containers:
+      - name: java
+        image: $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:$BUILD_NUMBER
+        ports:
+        - containerPort: 8190
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "500Mi"
+          requests:
+            cpu: "0.25"
+            memory: "250Mi"
+       
+
+
+   
+
+---
+
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: java
+  namespace: javaservice
+spec:
+  maxReplicas: 1
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: java
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 85

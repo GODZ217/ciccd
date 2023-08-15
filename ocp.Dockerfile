@@ -3,6 +3,6 @@ COPY . /java
 
 WORKDIR /java        
 
-RUN javac project.java
+RUN java project.java
 
 CMD ["java", "Project"]

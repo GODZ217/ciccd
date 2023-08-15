@@ -27,17 +27,17 @@ node {
             
             def tag = sh(returnStdout: true, script: "git rev-parse --short=8 HEAD").trim();
             
-            sh "cat build-folder/Dockerfile | oc new-build -D - --name java || true"
-            sh "oc start-build java --from-dir=build-folder/. --follow --wait "
+            sh "cat build-folder/Dockerfile | oc new-build -D - --name jdk || true"
+            sh "oc start-build jdk --from-dir=build-folder/. --follow --wait "
             
-            sh "oc tag cicd/java:latest javaservice/java:${tag} "
-            sh "oc tag cicd/java:latest javaservice/java:latest "
+            sh "oc tag cicd/jdk:latest jdkservice/jdk:${tag} "
+            sh "oc tag cicd/jdk:latest jdkservice/jdk:latest "
 
      stage 'deploy'
 
-      sh "sed 's,\\\$REGISTRY/\\\$HARBOR_NAMESPACE/\\\$APP_NAME:\\\$BUILD_NUMBER,image-registry.openshift-image-registry.svc:5000/javaservice/java:latest,g' kubernetes_dev.yaml > kubernetes-ocp.yaml"
-            sh "oc apply -f kubernetes-ocp.yaml -n javaservice "
-            sh "oc set triggers deployment/java --from-image=javaservice/java:latest -c java -n javaservice || true "
+      sh "sed 's,\\\$REGISTRY/\\\$HARBOR_NAMESPACE/\\\$APP_NAME:\\\$BUILD_NUMBER,image-registry.openshift-image-registry.svc:5000/jdkservice/jdk:latest,g' kubernetes_dev.yaml > kubernetes-ocp.yaml"
+            sh "oc apply -f kubernetes-ocp.yaml -n jdkservice "
+            sh "oc set triggers deployment/jdk --from-image=jdkservice/jdk:latest -c jdk -n jdkservice || true "
 
 
 }
